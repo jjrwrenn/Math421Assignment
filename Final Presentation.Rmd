@@ -1,0 +1,195 @@
+---
+title: "Default of Credit Card Clients"
+author: "John Richard Wrenn"
+date: "December 20, 2018"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Introduction
+
+Dataset is from University of California in Irvine, California
+
+Data is from a Tiawanese bank
+
+30,000 observations
+
+23 Predictors with 1 binary target variable
+
+## Variables Used
+
+- Credit (> 0)
+- Age (> 0)
+- Gender (M, F)
+- Education (High School, Uni, Grad School, Other)
+- Marital Status (Single, Married, Other)
+- Current Payment Status (-1, 0, 1, ..., 8)
+- Current Bill (>= 0)
+- Previous Bill (>= 0)
+- Default (Yes, No)
+
+## Intro Graphs
+
+```{r}
+data = read.csv(file = "C:\\Users\\student\\Documents\\Applied Data Mining\\Final Project\\default of credit card clients.csv", header = TRUE)
+
+# Remove this NULLs variable, is ID only
+data$X<-NULL
+
+# Replace names
+names(data) <- c('credit', 'gender', 'education', 'maritalStatus', 'age', 'sepPaymentStatus', 'augPaymentStatus', 'julPaymentStatus', 'junPaymentStatus', 'mayPaymentStatus', 'aprPaymentStatus', 'sepBillStatement', 'augBillStatement', 'julBillStatement', 'junBillStatement', 'mayBillStatement', 'aprBillStatement', 'sepPrevBillStatement', 'augPrevBillStatement', 'julPrevBillStatement', 'junPrevBillStatement', 'mayPrevBillStatement', 'aprPrevBillStatement', 'target')
+
+# Make odd values missing
+data$education[data$education == 6]<-NA
+data$education[data$education == 5]<-NA
+data$education[data$education == 0]<-NA
+
+data$maritalStatus[data$maritalStatus == 0]<-NA
+
+data$sepPaymentStatus[data$sepPaymentStatus == -2]<-NA
+data$augPaymentStatus[data$augPaymentStatus == -2]<-NA
+data$julPaymentStatus[data$julPaymentStatus == -2]<-NA
+data$junPaymentStatus[data$junPaymentStatus == -2]<-NA
+data$mayPaymentStatus[data$mayPaymentStatus == -2]<-NA
+data$aprPaymentStatus[data$aprPaymentStatus == -2]<-NA
+
+data$sepBillStatement[data$sepBillStatement < 0]<-NA
+data$augBillStatement[data$augBillStatement < 0]<-NA
+data$julBillStatement[data$julBillStatement < 0]<-NA
+data$junBillStatement[data$junBillStatement < 0]<-NA
+data$mayBillStatement[data$mayBillStatement < 0]<-NA
+data$aprBillStatement[data$aprBillStatement < 0]<-NA
+
+data$sepPrevBillStatement[data$sepPrevBillStatement < 0]<-NA
+data$augPrevBillStatement[data$augPrevBillStatement < 0]<-NA
+data$julPrevBillStatement[data$julPrevBillStatement < 0]<-NA
+data$junPrevBillStatement[data$junPrevBillStatement < 0]<-NA
+data$mayPrevBillStatement[data$mayPrevBillStatement < 0]<-NA
+data$aprPrevBillStatement[data$aprPrevBillStatement < 0]<-NA
+
+# Make some ints factors
+target.f <- factor(data$target, labels = c("No", "Yes"))
+gender.f <- factor(data$gender, labels = c("M", "F"))
+edu.f <- factor(data$education, labels = c("GradSchool", "University", "HighSchool", "Other"))
+marital.f <- factor(data$maritalStatus, labels = c("Married", "Single", "Other"))
+
+data$target <- target.f
+data$gender <- gender.f
+data$education <- edu.f
+data$maritalStatus <- marital.f
+
+library(ggplot2)
+
+ggplot(data) + geom_bar(aes(data$target))
+```
+
+
+## Intro Graphs (cont.)
+
+```{r}
+ggplot(data) + geom_density(aes(data$credit))
+```
+
+## Intro Graphs (cont.)
+
+```{r}
+ggplot(data) + geom_bar(aes(data$sepPaymentStatus, color = data$gender), position = "dodge", na.rm = TRUE)
+```
+
+## Intro Graphs (cont.)
+
+```{r, echo = FALSE}
+data.male = data[data$gender == "M",]
+data.female = data[data$gender == "F",]
+data.female.under = data.female[sample(1:nrow(data.female), nrow(data.male)),]
+data.gender.balance = rbind(data.male, data.female.under)
+ggplot(data.gender.balance) + geom_bar(aes(data.gender.balance$sepPaymentStatus, color = data.gender.balance$gender), position = "dodge", na.rm = TRUE)
+```
+
+## Intro Graphs (cont.)
+
+```{r, echo = FALSE}
+ggplot(data) + geom_density(aes(data$credit, color = data$gender)) + facet_wrap(~target)
+```
+
+## Intro Graphs (cont.)
+
+```{r, echo = FALSE}
+ggplot(data) + geom_freqpoly(aes(data$credit, color = data$education), bins = 30)
+```
+
+## rpart Results
+
+```{r}
+rpart.list <- c("Model", "Median", "Knn", "Complete", "Bin Median", "Bin Knn", "Bin Complete", "Dummy", "Accuracy", "69.35", "67.74", "69.84", "69.45", "69.80", "68.42", "70.95", "sensitivity", "52.61", "50.95", "52.81", "56.88", "56.63", "51.35", "53.89", "Specificity", "86.08", "84.52", "87.95", "82.01", "82.96", "85.84", "89.10")
+rpart.matrix <- matrix(rpart.list, nrow = length(rpart.list)/4, ncol = 4)
+rpart.matrix
+```
+
+## C5.0 Results
+
+```{r}
+C5.0.list <- c("Model", "Median", "Knn", "Complete", "Bin Median", "Bin Knn", "Bin Complete", "Dummy", "Size", "26", "28", "13", "169", "177", "107", "11", "Error Rate", "28.50%", "27.40%", "26.30%", "24.70%", "25.60%", "25.10%", "26.80%")
+C5.0.matrix <- matrix(C5.0.list, nrow = length(C5.0.list)/3, ncol = 3)
+C5.0.matrix
+```
+
+## Ranger Results
+
+```{r}
+ranger.list <- c("Model", "Median", "Knn", "Complete", "Bin Median", "Bin Knn", "Bin Complete", "Dummy", "Accuracy", "70.87%", "70.84%", "72.65%", "70.86%", "70.79", "70.96%", "72.23", "Min Node Size", "3", "3", "2", "2", "3", "3", "3")
+ranger.matrix <- matrix(ranger.list, nrow = length(ranger.list)/3, ncol = 3)
+ranger.matrix
+```
+## rpart Tuning Results
+
+```{r}
+rpart.tune.list <- c("Model", "Median", "Knn", "Complete", "Bin Median", "Bin Knn", "Bin Complete", "Dummy", "Accuracy", "69.35", "67.74", "69.84", "69.45", "69.80", "68.42", "70.95", "sensitivity", "52.61", "50.95", "52.81", "56.88", "56.63", "51.35", "53.89", "Specificity", "86.08", "84.52", "87.95", "82.01", "82.96", "85.84", "89.10")
+rpart.tune.matrix <- rpart.matrix
+rpart.tune.matrix
+```
+
+## C5.0 Tuning Results
+
+```{r}
+C5.0.tune.list <- c("Model", "Median", "Knn", "Complete", "Bin Median", "Bin Knn", "Bin Complete", "Dummy", "Error Rate", "27.70%", "26.50%", "26.10%", "24.40%", "25.00%", "24.30%", "26.80%", "Max Tree Size", "26", "38", "16", "169", "117", "107", "11")
+C5.0.tune.matrix <- matrix(C5.0.tune.list, nrow = length(C5.0.tune.list)/3, ncol = 3)
+C5.0.tune.matrix
+```
+
+## Ranger Tuning Results
+
+```{r}
+ranger.tune.list <- c("Model", "Median", "Knn", "Complete", "Bin Median", "Bin Knn", "Bin Complete", "Dummy", "Accuracy", "70.67%", "71.08%", "72.58%", "70.89%", "71.01%", "71.24%", "72.34%", "Min Node Size", "2", "1", "1", "3" , "1", "3", "2", "Split Rule", "Gini", "Gini", "Extra Trees", "Gini", "Gini", "Gini", "Gini")
+ranger.tune.matrix <- matrix(ranger.tune.list, ncol = 4, nrow = length(ranger.tune.list)/4)
+ranger.tune.matrix
+```
+
+## Conclusion
+
+The C5.0 algorithm is the superior algorithm in terms of error rate
+
+Binning can generally improve accuracy
+
+## Cool Fact and Feature
+
+```{r, echo = FALSE}
+sizes <- sapply(ls(), function(n) object.size(get(n)), simplify = FALSE)
+
+#print(sapply(sizes[order(as.integer(sizes))], function(s) format(s, unit = 'auto')))
+```
+
+```{r, echo = FALSE}
+sum <- 0
+for(i in 1:length(sizes)) {
+  sum = sum + as.integer(sizes[i])
+}
+```
+sizes <- sapply(ls(), function(n) object.size(get(n)), simplify = FALSE)
+
+print(sapply(sizes[order(as.integer(sizes))], function(s) format(s, unit = 'auto')))
+
+720 MB
